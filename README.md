@@ -1,6 +1,6 @@
 # 2048 Artificial Intelligence
 
-![2048-ai](banner.png?raw=true "2048 ai")
+![2048-ai](assets/banner.png?raw=true "2048 ai")
 
 Artificial intelligence used to solve the popular game "2048"
 
