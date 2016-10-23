@@ -15,19 +15,19 @@ This project is still a work-in-progress.
 | `ai.py`       | contains intelligent decision logic from quickly simulating 2048 moves & outcomes          |
 | `training.py` | runs the AI with quick non-graphical simulations for testing & hyperparameter optimization |
 
-### Heuristics:
+### Heuristics
 - monotonicity of rows/columns
 - number of adjacent tiles
 - number of empty tiles
 - loss penalty
 
-### Algorithm:
+### Algorithm
 - Recursively simulate all moves (up/down/right/left) for around 3 to 5 turns
 - Pick the depth 0 move with the highest score tree
 
-### Install Dependencies:
+### Install Dependencies
 Currently the only dependency: `pip install pyglet`
 
-### Run:
+### Run
 - To play the game normally, run `python game.py`
 - To test the AI, run `python training.py`
