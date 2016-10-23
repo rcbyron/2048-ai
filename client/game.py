@@ -313,4 +313,4 @@ def start(graphic=False, ai_solve=True):
         print("Score:", board.score)
 
 
-start()
+# start()

@@ -4,24 +4,21 @@ import sys
 # Board masks
 COL_MASK = 0xF000F000F000F000
 ROW_MASK = 0xFFFF000000000000
-EDGE_MASK = 0xF00FF00FF00FF00F
 FIRST_MASK = 0xF000000000000000
 TWO_MASK = 0x2000000000000000
 FOUR_MASK = 0x4000000000000000
-
 # Tuning parameters and weights
 MAX_DEPTH = 4
-EMPTY_TILE_POINTS = 12
-SMOOTHNESS_WEIGHT = 30
-EDGE_WEIGHT = 30
-LOSS_PENALTY = -200000
-MONOTONICITY_POWER = 3.0
-MONOTONICITY_WEIGHT = 27.0
+SMOOTHNESS_WEIGHT = 700
+# EDGE_WEIGHT = 30
+LOSS_PENALTY = -20000
+MONOTONICITY_POWER = 4.0
+MONOTONICITY_WEIGHT = 47.0
 SUM_POWER = 3.5
 SUM_WEIGHT = 11.0
 EMPTY_WEIGHT = 270.0
 
-MOVE_TABLE_DEPTH = 12
+MOVE_TABLE_DEPTH = 14
 
 move_table_bot_right = {}
 move_table_top_left = {}
@@ -210,10 +207,11 @@ def static_score(board):
                     smooth_points += 1
                 if row < 3 and board & (FIRST_MASK >> ((col << 2)+((row+1) << 4))) == (tile >> 16):
                     smooth_points += 1
-
-    return (empty_tiles*EMPTY_WEIGHT) + (sum_tiles*SUM_WEIGHT) + (edge_points * EDGE_WEIGHT) + \
-           (smooth_points * SMOOTHNESS_WEIGHT) - (mono_points * MONOTONICITY_WEIGHT) + \
-           (check_loss(board)*LOSS_PENALTY)
+    return (empty_tiles*EMPTY_WEIGHT) - (mono_points * MONOTONICITY_WEIGHT) + \
+           (check_loss(board)*LOSS_PENALTY) + (sum_tiles*SUM_WEIGHT) + (smooth_points * SMOOTHNESS_WEIGHT)
+    # return (empty_tiles*EMPTY_WEIGHT) + (sum_tiles*SUM_WEIGHT) + (edge_points * EDGE_WEIGHT) + \
+    #        (smooth_points * SMOOTHNESS_WEIGHT) - (mono_points * MONOTONICITY_WEIGHT) + \
+    #        (check_loss(board)*LOSS_PENALTY)
 
 
 def check_loss(board):
@@ -232,30 +230,11 @@ def check_loss(board):
 
 
 def monotonicity(board):
-    """ Returns POTENTIAL monotonicity """
+    """ Returns current monotonicity """
     monotonicity = 0
     for i in range(0, 4):
         monotonicity += mono_table[get_row(board, i)] + mono_table[get_col(board, i)]
     return monotonicity
-
-
-def smoothness(board):
-    """ Prefers adjacent tiles of same value """
-    s = 0
-    for row in range(0, 4):
-        for col in range(0, 4):
-            tile = board & (FIRST_MASK >> ((col << 2)+(row << 4)))
-
-            if tile != 0:
-                if col > 0 and board & (FIRST_MASK >> (((col-1) << 2)+(row << 4))) == (tile << 4):
-                    s += 1
-                if col < 3 and board & (FIRST_MASK >> (((col+1) << 2)+(row << 4))) == (tile >> 4):
-                    s += 1
-                if row > 0 and board & (FIRST_MASK >> ((col << 2)+((row-1) << 4))) == (tile << 16):
-                    s += 1
-                if row < 3 and board & (FIRST_MASK >> ((col << 2)+((row+1) << 4))) == (tile >> 16):
-                    s += 1
-    return s
 
 
 def get_empty_spots(board):
@@ -284,13 +263,19 @@ def spawn_tile(board):
     return (board, True)
 
 
-def show(board):
+def show(board, show_best_tile=False):
     """ Prints the board """
+    best_tile = 0
     for row in range(0, 4):
         for col in range(0, 4):
-            print((board & FIRST_MASK) >> (64-4), end=" ")
+            tile = (board & FIRST_MASK) >> (64-4)
+            if tile > best_tile:
+                best_tile = tile
+            print(tile, end=" ")
             board <<= 4
         print()
+    if show_best_tile:
+        print("Best Tile:", 2**best_tile)
 
 
 def helper(board, depth):
@@ -345,32 +330,9 @@ def simulate():
         if i > 9998:
             print("Move limit reached! Yay?")
             break
-    return (score, i)
+    return (b, score, i)
 
 build_tables()
-
-# # Tuning parameters and weights
-# MAX_DEPTH = 4
-# EMPTY_TILE_POINTS = 12
-# SMOOTHNESS_WEIGHT = 30
-# EDGE_WEIGHT = 30
-# LOSS_PENALTY = -200000
-# MONOTONICITY_POWER = 3.0
-# MONOTONICITY_WEIGHT = 27.0
-# SUM_POWER = 3.5
-# SUM_WEIGHT = 11.0
-# EMPTY_WEIGHT = 270.0
-
-cases = 4
-avg_score = 0
-avg_moves = 0
-for i in range(0, cases):
-    print(str((i/cases)*100)+"%")
-    s, m = simulate()
-    avg_score += s
-    avg_moves += m
-print("100%")
-print("Avg Score:", (avg_score/i), "Avg. Moves:", (avg_moves/i))
 
 
 def set_board(board):
